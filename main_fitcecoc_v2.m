@@ -18,12 +18,16 @@ imds0 = imageDatastore(location, 'IncludeSubfolders', true, ...
 % Select persons with 10 to 40 images
 disp('Creating subset of several persons...');
 tbl = countEachLabel(imds0);
-mask = tbl{:,2} >= 10 & tbl{:,2} <= 40;
+mask = tbl{:,2} >= 8 & tbl{:,2} <= 40;
 disp(['Number of images: ', num2str(sum(tbl{mask,2}))]);
 persons = unique(tbl{mask,1});
 
 [lia, locb] = ismember(imds0.Labels, persons);
 imds = subset(imds0, lia);
+
+% Display the total number of people the model is trained to recognize
+numPersons = numel(persons);
+disp(['The model is trained to recognize ', num2str(numPersons), ' people.']);
 
 % Display montage of images
 t = tiledlayout('flow');
@@ -78,10 +82,14 @@ c = cm(1 + mod(uint8(Y), size(cm,1)), :);
 disp('Training Support Vector Machine...');
 options = statset('UseParallel', true); % Enable parallel SVM training
 tic;
-Mdl = fitcecoc(X, Y, 'Verbose', 2, 'Learners', 'svm', ...
-               'Options', options, ...
-               'OptimizeHyperparameters', 'all', ...
-               'HyperparameterOptimizationOptions', struct('UseParallel', true));
+
+Mdl = fitcecoc(X, Y,'Verbose', 2,'Learners','svm',...
+               'Options',options);
+
+% Mdl = fitcecoc(X, Y, 'Verbose', 2, 'Learners', 'svm', ...
+%                'Options', options, ...
+%                'OptimizeHyperparameters', 'all', ...
+%                'HyperparameterOptimizationOptions', struct('UseParallel', true));
 toc;
 
 % Plot feature space using top predictors
